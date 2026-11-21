@@ -54,6 +54,8 @@
 
   .empty { text-align:center; color:#bfa77a; padding:40px 0; font-size:14px; }
   .err { color:#c0392b; font-size:13px; text-align:center; margin-top:10px; }
+  .delbtn { margin-top:10px; text-align:center; color:#c0392b; font-size:13px; padding:8px; border:1px solid #e0b4ab; border-radius:6px; cursor:pointer; }
+  .delbtn:active { background:#fdecea; }
 </style>
 </head>
 <body>
@@ -131,6 +133,7 @@ function render() {
       (r.observer_code ? '<div class="line"><b>代号：</b>' + esc(r.observer_code) + '</div>' : '') +
       img +
       '<div class="meta">' + time + ' · 状态:' + esc(r.status) + '</div>' +
+      '<div class="delbtn" onclick="deleteReport(\'' + r.id + '\', \'' + esc(r.photo_key || '') + '\')">删除此条</div>' +
       '</div>';
   }).join('');
 }
@@ -138,6 +141,29 @@ function render() {
 function esc(s) {
   if (s == null) return '';
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+async function deleteReport(id, photoKey) {
+  if (!confirm('确认删除这条档案？此操作不可恢复。')) return;
+  try {
+    // 1. 删除数据库记录
+    const resp = await fetch(SUPABASE_URL + '/rest/v1/reports?id=eq.' + id, {
+      method: 'DELETE',
+      headers: { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY }
+    });
+    if (!resp.ok) throw new Error('删除失败');
+    // 2. 删除存储照片（如果有）
+    if (photoKey) {
+      await fetch(SUPABASE_URL + '/storage/v1/object/' + BUCKET + '/' + photoKey, {
+        method: 'DELETE',
+        headers: { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY }
+      });
+    }
+    loadData();
+  } catch (e) {
+    console.error(e);
+    alert('删除失败，请重试');
+  }
 }
 
 function exportCSV() {
