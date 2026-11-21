@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>民间观察鉴定所 · 提交鉴定</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body {
+    font-family: 'LXGW WenKai', 'KaiTi', 'STKaiti', 'Kaiti SC', '楷体', serif;
+    background-color:#faf5e8;
+    background-image:
+      radial-gradient(circle at 20% 30%, rgba(244,167,185,0.08) 0, transparent 40%),
+      radial-gradient(circle at 85% 80%, rgba(191,227,208,0.12) 0, transparent 45%),
+      linear-gradient(rgba(90,80,55,0.035) 1px, transparent 1px);
+    background-size:100% 100%,100% 100%,100% 26px;
+    color:#3a3322;
+    min-height:100vh;
+    padding-bottom:40px;
+  }
+  .wrap { max-width:520px; margin:0 auto; padding:20px 20px 40px; }
+  h1 { font-size:22px; text-align:center; margin-bottom:4px; color:#3a3322; letter-spacing:2px; }
+  .sub { text-align:center; font-size:12px; color:#a08a5c; margin-bottom:24px; }
+
+  /* 拍立得照片 */
+  .polaroid {
+    background:#fffdf8; border-radius:6px; padding:14px;
+    box-shadow:0 1px 2px rgba(60,50,30,0.08), 0 6px 18px rgba(80,60,40,0.12);
+    text-align:center; cursor:pointer; position:relative; margin-top:10px;
+  }
+  .polaroid img { width:100%; max-height:280px; object-fit:cover; border-radius:4px; display:block; }
+  .tape {
+    position:absolute; width:56px; height:22px; left:50%; margin-left:-28px; top:-10px;
+    border-radius:2px; background:rgba(154,205,180,0.75); transform:rotate(-3deg);
+    box-shadow:0 1px 3px rgba(0,0,0,0.1);
+  }
+  .placeholder { color:#a08a5c; padding:30px 10px; }
+  .placeholder .icon { font-size:34px; color:#c9a55e; }
+
+  .section { margin-top:26px; }
+  .label { font-size:17px; font-weight:bold; color:#3a3322; margin-bottom:6px; }
+  .hint { font-size:11px; color:#bfa77a; margin-bottom:6px; line-height:1.5; }
+  .field { margin-bottom:16px; }
+  .field .fname { font-size:15px; font-weight:600; color:#3a3322; margin-bottom:2px; }
+  input[type=text], textarea {
+    width:100%; border:none; border-bottom:2px solid #dcd2bd; background:rgba(255,255,255,0.7);
+    padding:8px 6px; font-family:inherit; font-size:14px; color:#3a3322; border-radius:4px 4px 0 0;
+  }
+  textarea { min-height:80px; resize:vertical; border-bottom:2px solid #dcd2bd; }
+  input:focus, textarea:focus { outline:none; border-bottom-color:#c0614b; }
+
+  /* 评级 */
+  .ratings { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .rating-btn {
+    border-radius:16px; padding:18px 8px; text-align:center; color:#fff; cursor:pointer;
+    border:3px solid transparent; transition:all .15s;
+  }
+  .rating-btn .r { font-size:30px; font-weight:bold; }
+  .rating-btn .rl { font-size:14px; margin-top:4px; }
+  .rating-btn .rd { font-size:11px; margin-top:4px; opacity:.9; }
+  .rating-btn.sel { border-color:#3a3322; }
+  .rating-s { background:#c0392b; }
+  .rating-a { background:#e67e22; }
+  .rating-b { background:#7f8c8d; }
+  .rating-c { background:#2c3e50; }
+
+  .submit-btn {
+    margin-top:30px; background:#c0614b; color:#fff8f0; border-radius:16px;
+    padding:16px; text-align:center; font-size:17px; font-weight:bold; cursor:pointer;
+    transition:background .2s;
+  }
+  .submit-btn:active { background:#b05743; }
+  .submit-btn.disabled { background:#b05743; opacity:.7; }
+  .foot { text-align:center; font-size:11px; color:#bfa77a; margin-top:12px; }
+
+  /* 成功提示 */
+  .success-box {
+    display:none; text-align:center; padding:40px 20px;
+  }
+  .success-box .stamp {
+    display:inline-block; width:90px; height:90px; line-height:90px; border-radius:50%;
+    border:4px solid #c0392b; color:#c0392b; font-size:20px; font-weight:bold;
+    transform:rotate(-12deg); margin-bottom:20px; letter-spacing:2px;
+  }
+  .success-box h2 { font-size:20px; margin-bottom:10px; }
+  .success-box p { font-size:13px; color:#7a6a48; }
+</style>
+</head>
+<body>
+<div class="wrap" id="formWrap">
+  <h1>民间观察鉴定所</h1>
+  <div class="sub">在地文化档案 · 匿名登记处</div>
+
+  <!-- 照片 -->
+  <div class="section">
+    <div class="label">1 · 上缴物证照片</div>
+    <div class="polaroid" id="photoBox" onclick="document.getElementById('fileInput').click()">
+      <div class="tape"></div>
+      <div id="photoPlaceholder" class="placeholder">
+        <div class="icon">📷</div>
+        <div style="margin-top:6px;">点击拍摄 / 选择一张照片</div>
+        <div style="font-size:11px;color:#bfa77a;margin-top:4px;">拍下肤浅但真实的民间见过</div>
+      </div>
+      <img id="photoPreview" style="display:none;">
+    </div>
+    <input type="file" id="fileInput" accept="image/*" style="display:none;">
+  </div>
+
+  <!-- 填空 -->
+  <div class="section">
+    <div class="label">2 · 填写鉴定卷宗</div>
+    <div class="field">
+      <div class="fname">鉴定对象</div>
+      <div class="hint">拍到的是什么？例：老张家的黄焖鸡</div>
+      <input type="text" id="object_name" placeholder="例：张记麻辣烫">
+    </div>
+    <div class="field">
+      <div class="fname">民间命名</div>
+      <div class="hint">给 ta 起个霸气的江湖名</div>
+      <input type="text" id="folk_name" placeholder="例：碳水核弹">
+    </div>
+    <div class="field">
+      <div class="fname">地理鉴定</div>
+      <div class="hint">用地理术语强行分析，例：地处冲积平原、热量集聚</div>
+      <textarea id="geo_analysis" placeholder="用地理学硬核术语分析它…"></textarea>
+    </div>
+    <div class="field">
+      <div class="fname">政治鉴定</div>
+      <div class="hint">用政治术语强行升华，例：坚持"好吃到人均和平"</div>
+      <textarea id="political_analysis" placeholder="用政治学话说出格局…"></textarea>
+    </div>
+    <div class="field">
+      <div class="fname">字号代号（可留空）</div>
+      <div class="hint">例：007号观察员 · 我也想当卷宗里那个匿名侠</div>
+      <input type="text" id="observer_code" placeholder="例：007号观察员">
+    </div>
+  </div>
+
+  <!-- 评级 -->
+  <div class="section">
+    <div class="label">3 · 盖评级戳</div>
+    <div class="hint" id="placeHint">压箱底价值评级</div>
+    <div class="ratings">
+      <div class="rating-btn rating-s" data-r="S" onclick="setRating('S')">
+        <div class="r">S</div><div class="rl">必打卡</div><div class="rd">此生不吃后悔一生</div>
+      </div>
+      <div class="rating-btn rating-a" data-r="A" onclick="setRating('A')">
+        <div class="r">A</div><div class="rl">尚可</div><div class="rd">路过可以尝尝</div>
+      </div>
+      <div class="rating-btn rating-b" data-r="B" onclick="setRating('B')">
+        <div class="r">B</div><div class="rl">避雷</div><div class="rd">谨慎消费，人傻钱多</div>
+      </div>
+      <div class="rating-btn rating-c" data-r="C" onclick="setRating('C')">
+        <div class="r">C</div><div class="rl">离谱</div><div class="rd">快跑！别惯着它</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="submit-btn" id="submitBtn" onclick="submit()">盖章 · 上缴鉴定报告</div>
+  <div class="foot">匿名提交 · 不收集任何个人信息</div>
+</div>
+
+<div class="success-box" id="successBox">
+  <div class="stamp">已入册</div>
+  <h2>鉴定报告已封存</h2>
+  <p>感谢上缴，你的民间档案已被登记。</p>
+  <p style="margin-top:8px;color:#bfa77a;">可以关闭本页了。</p>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://logdxmjmpmewiktwrvxu.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_7G47Obhi24AM6ZWrFCKbnw_wTH912li';
+const BUCKET = 'reports';
+
+let selectedFile = null;
+let selectedRating = '';
+
+// 读取地名
+fetch(SUPABASE_URL + '/rest/v1/settings?key=eq.place_name&select=value', {
+  headers: { apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY }
+}).then(r => r.json()).then(d => {
+  if (d && d[0] && d[0].value) {
+    document.getElementById('placeHint').textContent = d[0].value + ' · 压箱底价值评级';
+  }
+}).catch(() => {});
+
+document.getElementById('fileInput').addEventListener('change', function(e) {
+  const f = e.target.files && e.target.files[0];
+  if (!f) return;
+  selectedFile = f;
+  const url = URL.createObjectURL(f);
+  document.getElementById('photoPreview').src = url;
+  document.getElementById('photoPreview').style.display = 'block';
+  document.getElementById('photoPlaceholder').style.display = 'none';
+});
+
+function setRating(r) {
+  selectedRating = r;
+  document.querySelectorAll('.rating-btn').forEach(b => {
+    b.classList.toggle('sel', b.dataset.r === r);
+  });
+}
+
+function toast(msg) {
+  const t = document.createElement('div');
+  t.textContent = msg;
+  t.style.cssText = 'position:fixed;left:50%;top:45%;transform:translateX(-50%);background:rgba(0,0,0,.8);color:#fff;padding:10px 20px;border-radius:8px;font-size:14px;z-index:999;';
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2200);
+}
+
+async function uploadPhoto(file) {
+  const mime = file.type || 'image/jpeg';
+  const ext = mime === 'image/png' ? 'png' : mime === 'image/webp' ? 'webp' : mime === 'image/gif' ? 'gif' : 'jpg';
+  const key = Date.now() + '_' + Math.random().toString(36).slice(2,8) + '.' + ext;
+  const resp = await fetch(SUPABASE_URL + '/storage/v1/object/' + BUCKET + '/' + key, {
+    method: 'POST',
+    headers: {
+      apikey: SUPABASE_ANON_KEY,
+      Authorization: 'Bearer ' + SUPABASE_ANON_KEY,
+      'Content-Type': mime,
+      'x-upsert': 'false'
+    },
+    body: file
+  });
+  if (!resp.ok) throw new Error('图片上传失败');
+  return key;
+}
+
+async function submit() {
+  const object_name = document.getElementById('object_name').value.trim();
+  const folk_name = document.getElementById('folk_name').value.trim();
+  const geo_analysis = document.getElementById('geo_analysis').value.trim();
+  const political_analysis = document.getElementById('political_analysis').value.trim();
+  const observer_code = document.getElementById('observer_code').value.trim();
+
+  if (!selectedFile) { toast('先拍/选一张照片'); return; }
+  if (!object_name || !folk_name) { toast('请填写鉴定对象和民间命名'); return; }
+  if (!geo_analysis || !political_analysis) { toast('地理与政治鉴定都要写哦'); return; }
+  if (!selectedRating) { toast('请给个评级'); return; }
+
+  const btn = document.getElementById('submitBtn');
+  btn.classList.add('disabled');
+  btn.textContent = '正在封册入柜…';
+
+  try {
+    let photoKey = null;
+    if (selectedFile) {
+      photoKey = await uploadPhoto(selectedFile);
+    }
+    const body = {
+      object_name, folk_name, geo_analysis, political_analysis,
+      rating: selectedRating,
+      observer_code: observer_code || null,
+      photo_key: photoKey,
+      status: 'live', featured: false, likes: 0
+    };
+    const resp = await fetch(SUPABASE_URL + '/rest/v1/reports', {
+      method: 'POST',
+      headers: {
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: 'Bearer ' + SUPABASE_ANON_KEY,
+        'Content-Type': 'application/json',
+        Prefer: 'return=representation'
+      },
+      body: JSON.stringify(body)
+    });
+    if (!resp.ok) throw new Error('提交失败');
+    document.getElementById('formWrap').style.display = 'none';
+    document.getElementById('successBox').style.display = 'block';
+  } catch (e) {
+    console.error(e);
+    toast('提交失败，请重试');
+  } finally {
+    btn.classList.remove('disabled');
+    btn.textContent = '盖章 · 上缴鉴定报告';
+  }
+}
+</script>
+</body>
+</html>
